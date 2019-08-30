@@ -1,0 +1,34 @@
+CC:=mpiicc
+FCC:=mpiifort
+CFLAGS:=-Ofast -parallel -qopt-report -march=native -mtune=native -g -Wall -qopenmp -mkl=parallel -fpp -DUSEMKL
+FFLAGS:=-Ofast -parallel -qopt-report -march=native -mtune=native -g -Wall -qopenmp -mkl=parallel -fpp -DUSEMKL
+LIBS:=-lpthread -lm -ldl
+
+FOBJS:=sptest.o mkl_pardiso_solver.o nls2d_mb4spmpi.o 
+MODS:=$(FOBJS:.o=.mod)
+COBJS:=csrchk.o
+OBJS:=$(COBJS) $(FOBJS)
+BIN=a.out
+
+.SUFFIXES:
+
+
+$(BIN): $(OBJS)
+	$(FCC) $(FFLAGS) $^ -o $@ $(LIBS)
+
+original.out: nls2d_bm4.o
+	$(FCC) $(FFLAGS) $^ -o original.out $(LIBS)
+
+%.o:%.c
+	$(CC) $(CFLAGS) -c -o $@ $<
+
+%.o:%.f90 $(MODS)
+	$(FCC) $(FFLAGS) -c -o $@ $<
+
+%.mod:%.f90
+	$(FCC) $(FFLAGS) -fsyntax-only $<
+
+.PHONY: clean
+clean:
+	rm $(BIN) $(OBJS) $(MODS)
+
